@@ -1,0 +1,106 @@
+{
+    "person": [
+        "person"
+    ],
+    "vehicle": [
+        "truck",
+        "skateboard",
+        "bicycle",
+        "car",
+        "motorcycle",
+        "bus",
+        "train",
+        "boat"
+    ],
+    "container": [
+        "suitcase",
+        "handbag",
+        "backpack",
+        "refrigerator",
+        "snowboard",
+        "surfboard",
+        "microwave",
+        "couch",
+        "bed",
+        "oven"
+    ],
+    "office": [
+        "chair",
+        "dining table",
+        "tv",
+        "laptop",
+        "mouse",
+        "remote",
+        "keyboard",
+        "bottle",
+        "wine glass",
+        "potted plant"
+    ],
+    "animal": [
+        "bird",
+        "cat",
+        "dog",
+        "horse",
+        "sheep",
+        "cow",
+        "elephant",
+        "bear",
+        "zebra",
+        "giraffe"
+    ],
+    "cell phone": [
+        "cell phone"
+    ],
+    "weapon": [
+        "knife",
+        "spoon",
+        "baseball bat",
+        "tennis racket",
+        "scissors",
+        "fork"
+    ],
+    "toilet": [
+        "toilet"
+    ],
+    "clock": [
+        "clock"
+    ],
+    "sign": [
+        "traffic light",
+        "fire hydrant",
+        "stop sign",
+        "parking meter"
+    ],
+    "other": [
+        "bench",
+        "umbrella",
+        "frisbee",
+        "skis",
+        "sports ball",
+        "kite",
+        "baseball glove",
+        "toaster",
+        "book",
+        "sink",
+        "vase"
+    ],
+    "ignore": [
+        "airplane",
+        "banana",
+        "apple",
+        "sandwich",
+        "orange",
+        "broccoli",
+        "carrot",
+        "hot dog",
+        "pizza",
+        "donut",
+        "cake",
+        "tie",
+        "teddy bear",
+        "hair drier",
+        "toothbrush",
+        "cup",
+        "bowl"
+    ]
+}

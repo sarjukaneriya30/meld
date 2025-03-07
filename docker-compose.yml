@@ -1,0 +1,207 @@
+services:
+  tmsearchenginev2:
+    ports:
+      - "80"
+      - "443"
+      - "7055:7055"
+    image: tmsearchenginev2
+    build: ./TMSearchEngineV2
+    restart: unless-stopped
+  aimsui:
+    ports:
+      - "80"
+      - "443"
+      - "7060:7060"
+    image: aimsui
+    build: ./AIMS_UI
+    restart: unless-stopped
+  tmsearchengine:
+    ports:
+      - "80"
+      - "443"
+      - "7050:7050"
+    image: tmsearchengine
+    build: ./TMSearchEngine
+    restart: unless-stopped
+  attaboticsworker:
+    ports:
+      - "8090"
+      - "5672"
+      - "80"
+    image: attaboticsworker
+    build: ./RabbitMQWorkers/Attabotics
+    restart: unless-stopped
+  tmoworker:
+    ports:
+      - "8090"
+      - "5672"
+      - "80"
+    image: tmoworker
+    build: ./RabbitMQWorkers/TMO
+    restart: unless-stopped
+  d365worker:
+    ports:
+      - "80"
+      - "5672"
+      - "443"
+    image: d365worker
+    build: ./RabbitMQWorkers/D365
+    restart: unless-stopped
+  conveyord365worker:
+    ports:
+      - "80"
+      - "5672"
+      - "443"
+    image: conveyord365worker
+    build: ./RabbitMQWorkers/ConveyorD365
+    restart: unless-stopped
+  conveyord3651330worker:
+    ports:
+      - "80"
+      - "5672"
+      - "443"
+    image: conveyord3651330worker
+    build: ./RabbitMQWorkers/ConveyorD3651330
+    restart: unless-stopped
+  d365tmoworker:
+    ports:
+      - "80"
+      - "5672"
+      - "443"
+    image: d365tmoworker
+    build: ./RabbitMQWorkers/D365TMO
+    restart: unless-stopped
+  autonomousscanworker:
+    ports:
+      - "80"
+      - "5672"
+      - "443"
+    
+    image: autonomousscanworker
+    build: ./RabbitMQWorkers/AutonomousScan
+    restart: unless-stopped
+  nodered:
+    ports:
+      - "80"
+      - "443"
+      - "1880:1880"
+    volumes:
+      - node-red-data:/data
+    image: nodered/node-red:latest
+    build: ./NodeRed
+    restart: unless-stopped
+  rabbitmq:
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+      - "15672:15672"
+      - "5672:5672"
+      - "5671:5671"
+    volumes:
+      - rabbitmq-data:/etc/rabbitmq/
+    image: rabbitmq:3.8-management
+    build: ./RabbitMQ
+    restart: unless-stopped
+  grafana:
+    ports:
+      - "3000:3000"
+    image: grafana/grafana-oss:latest
+    build: ./Grafana
+    restart: unless-stopped
+  influxdb:
+    ports:
+      - "8086:8086"
+    image: influxdb:latest
+    build: ./InfluxDB
+    restart: unless-stopped
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 8888:8080
+    restart: unless-stopped
+  physicalintrusion:
+    ports:
+      - "5671"
+      - "5672"
+      - "1433"
+      - "8050:8050"
+    image: physicalintrusion
+    build: ./PhysicalIntrusion
+    restart: always
+    command: python3 startup.py
+    volumes:
+      - physicalintrusion-data:/app
+  shortestpath:
+    ports:
+      - "8090"
+      - "5672"
+      - "80"
+    image: shortestpath
+    build: ./RabbitMQWorkers/ShortestPath
+    command: python3 main.py
+    restart: unless-stopped
+  ocr:
+    ports:
+      - "80"
+      - "443"
+      - "1883"
+      - "5000:5000"
+      - "5001:5001"
+    volumes:
+      - ocr-data:/app
+    image: ocr
+    build: ./OCR
+    command: python3 startup.py
+    restart: unless-stopped
+    env_file: "./OCR/ocr.env"
+  storageoptimization:
+    ports:
+      - "5672"
+      - "80"
+      - "1443"
+    volumes:
+      - storageoptimization-data:/app
+    image: storageoptimization
+    build: ./RabbitMQWorkers/StorageOptimization
+    command: python3 storage_opt.py
+    restart: unless-stopped
+  prometheus:
+    ports:
+      - "9090:9090"
+      - "15692"
+    image: prometheus
+    build: ./Prometheus
+    restart: unless-stopped
+  d365onerfidworker:
+    ports:
+      - "80"
+      - "5672"
+      - "443"
+    image: d365onerfidworker
+    build: ./RabbitMQWorkers/D365OneRFID
+    restart: unless-stopped
+  transitiondoors2200worker:
+    ports:
+      - "80"
+      - "5672"
+      - "443"
+    image: transitiondoors2200worker
+    build: ./RabbitMQWorkers/TransitionDoors2200
+    restart: unless-stopped
+  transitiondoors1330worker:
+    ports:
+      - "80"
+      - "5672"
+      - "443"
+    image: transitiondoors1330worker
+    build: ./RabbitMQWorkers/TransitionDoors1330
+    restart: unless-stopped
+
+volumes:
+  node-red-data:
+  ocr-data:
+  storageoptimization-data:
+  rabbitmq-data:
+  physicalintrusion-data:

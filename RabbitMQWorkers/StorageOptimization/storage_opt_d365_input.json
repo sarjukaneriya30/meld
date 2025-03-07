@@ -1,0 +1,37 @@
+{
+  "TransactionId": "EVNT000000056",
+  "Type": "pick drop",
+  "VehicleID": 0,
+  "VehicleType": "amr",
+  "Priority": 0,
+  "LoadContainer": "",
+  "LoadContent": "content",
+  "LoadIdentifier": "CONT-000000047",
+  "Locations": [
+    {
+      "Operation": "pick",
+      "Name": "CONV-SP-1",
+      "Level": 0,
+      "Inventory": "System"
+    },
+    {
+      "Operation": "drop",
+      "Name": "Final",
+      "Level": 0,
+      "Inventory": "System"
+    }
+  ],
+  "KPMGAdditionalData": {
+    "ContainerType": "WOOD SHIPPING PALLET",
+    "priority": "A",
+    "height": 7.5,
+    "width":63.5,
+    "depth":48,
+    "ContainerContent": [
+      {
+        "Niin": "015156764",
+        "qty": 1
+      }
+    ]
+  }
+}

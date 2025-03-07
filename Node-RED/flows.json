@@ -1,0 +1,1866 @@
+[
+    {
+        "id": "f6f2187d.f17ca8",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "4edafb78d7295578",
+        "type": "tab",
+        "label": "HTTP Endpoints",
+        "disabled": false,
+        "info": ""
+    },
+    {
+        "id": "979d1cd475fff04d",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "10.13.0.34",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "3cc11d24.ff01a2",
+        "type": "comment",
+        "z": "f6f2187d.f17ca8",
+        "name": "WARNING: please check you have started this container with a volume that is mounted to /data\\n otherwise any flow changes are lost when you redeploy or upgrade the container\\n (e.g. upgrade to a more recent node-red docker image).\\n  If you are using named volumes you can ignore this warning.\\n Double click or see info side panel to learn how to start Node-RED in Docker to save your work",
+        "info": "\nTo start docker with a bind mount volume (-v option), for example:\n\n```\ndocker run -it -p 1880:1880 -v /home/user/node_red_data:/data --name mynodered nodered/node-red\n```\n\nwhere `/home/user/node_red_data` is a directory on your host machine where you want to store your flows.\n\nIf you do not do this then you can experiment and redploy flows, but if you restart or upgrade the container the flows will be disconnected and lost. \n\nThey will still exist in a hidden data volume, which can be recovered using standard docker techniques, but that is much more complex than just starting with a named volume as described above.",
+        "x": 350,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "01456b250dc9ba90",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "Attabotics HTTP In",
+        "url": "/Attabotics",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 370,
+        "y": 260,
+        "wires": [
+            [
+                "c88fa03028718318",
+                "f6e846945e93b84c"
+            ]
+        ]
+    },
+    {
+        "id": "a17e6e3a0bbf8c8b",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "Attabotics HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 960,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "f6e846945e93b84c",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "Attabotics Create OK Response",
+        "func": "msg.payload = \"Successfully posted to Attabotics Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 260,
+        "wires": [
+            [
+                "a17e6e3a0bbf8c8b"
+            ]
+        ]
+    },
+    {
+        "id": "57bc00592940109d",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "Attabotics MQTT Broker Publish",
+        "topic": "Attabotics",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 950,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "c88fa03028718318",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "Attabotics Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 200,
+        "wires": [
+            [
+                "57bc00592940109d"
+            ]
+        ]
+    },
+    {
+        "id": "4eaab62b91384b17",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "57bc00592940109d"
+        ],
+        "x": 400,
+        "y": 200,
+        "wires": [
+            [
+                "c88fa03028718318"
+            ]
+        ]
+    },
+    {
+        "id": "2622a731d4faa4ea",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "D365 HTTP In",
+        "url": "/D365",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 390,
+        "y": 520,
+        "wires": [
+            [
+                "b45dd7bdad75f28c",
+                "0bc572d51f9a5229"
+            ]
+        ]
+    },
+    {
+        "id": "400c75cae8e4d54a",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "D365 HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 930,
+        "y": 520,
+        "wires": []
+    },
+    {
+        "id": "0bc572d51f9a5229",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "D365 Create OK Response",
+        "func": "msg.payload = \"Successfully posted to D365 Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 640,
+        "y": 520,
+        "wires": [
+            [
+                "400c75cae8e4d54a"
+            ]
+        ]
+    },
+    {
+        "id": "17f96ca496ce700d",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "D365 MQTT Broker Publish",
+        "topic": "D365",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 900,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "b45dd7bdad75f28c",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "D365 Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 460,
+        "wires": [
+            [
+                "17f96ca496ce700d"
+            ]
+        ]
+    },
+    {
+        "id": "899a10d3a423d8d1",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "17f96ca496ce700d"
+        ],
+        "x": 400,
+        "y": 460,
+        "wires": [
+            [
+                "b45dd7bdad75f28c"
+            ]
+        ]
+    },
+    {
+        "id": "f08a4b2722f2d0f7",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "Attabotics HTTP Endpoint",
+        "info": "",
+        "x": 350,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "e1d07c9fa8f54f9d",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "D365 HTTP Endpoint",
+        "info": "",
+        "x": 360,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "bd684f9901e201f7",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "HandHeld HTTP In",
+        "url": "/HandHeld",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 370,
+        "y": 740,
+        "wires": [
+            [
+                "dfb6dbb0e6a6c1ee",
+                "89983bca4690a322"
+            ]
+        ]
+    },
+    {
+        "id": "50be968186508e3c",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "HandHeld HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 960,
+        "y": 740,
+        "wires": []
+    },
+    {
+        "id": "89983bca4690a322",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "HandHeld Create OK Response",
+        "func": "msg.payload = \"Successfully posted to HandHeld Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 740,
+        "wires": [
+            [
+                "50be968186508e3c"
+            ]
+        ]
+    },
+    {
+        "id": "d01f120a61a4437c",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "HandHeld MQTT Broker Publish",
+        "topic": "HandHeld",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 950,
+        "y": 680,
+        "wires": []
+    },
+    {
+        "id": "dfb6dbb0e6a6c1ee",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "HandHeld Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 680,
+        "wires": [
+            [
+                "d01f120a61a4437c"
+            ]
+        ]
+    },
+    {
+        "id": "4c78407931b8da60",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "d01f120a61a4437c"
+        ],
+        "x": 400,
+        "y": 680,
+        "wires": [
+            [
+                "dfb6dbb0e6a6c1ee"
+            ]
+        ]
+    },
+    {
+        "id": "95aa6efb8d66782f",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "HandHeld HTTP Endpoint",
+        "info": "",
+        "x": 370,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "446db7bd5694ad0f",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors HTTP In",
+        "url": "/TransitionDoors",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 370,
+        "y": 980,
+        "wires": [
+            [
+                "2bdd0de5d83e4620",
+                "befcdcf4c0476a77"
+            ]
+        ]
+    },
+    {
+        "id": "b54b066643be4dc8",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 1000,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "befcdcf4c0476a77",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "TansitionDoors Create OK Response",
+        "func": "msg.payload = \"Successfully posted to TransitionDoor Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 980,
+        "wires": [
+            [
+                "b54b066643be4dc8"
+            ]
+        ]
+    },
+    {
+        "id": "63a516b431d32e7f",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoor MQTT Broker Publish",
+        "topic": "TransitionDoors",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 990,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "2bdd0de5d83e4620",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 920,
+        "wires": [
+            [
+                "63a516b431d32e7f"
+            ]
+        ]
+    },
+    {
+        "id": "e88dd11755de4dc0",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "63a516b431d32e7f"
+        ],
+        "x": 400,
+        "y": 920,
+        "wires": [
+            [
+                "2bdd0de5d83e4620"
+            ]
+        ]
+    },
+    {
+        "id": "46ef83340ef9b115",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors HTTP Endpoint",
+        "info": "",
+        "x": 390,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "e45f9c080b2b6ec8",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "ScanZones HTTP In",
+        "url": "/ScanZones",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 370,
+        "y": 1200,
+        "wires": [
+            [
+                "927aa19022352dfe",
+                "f04675027b61b46e"
+            ]
+        ]
+    },
+    {
+        "id": "b0ec0fb0e4c8cacc",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "ScanZones HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 980,
+        "y": 1200,
+        "wires": []
+    },
+    {
+        "id": "f04675027b61b46e",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "ScanZones Create OK Response",
+        "func": "msg.payload = \"Successfully posted to ScanZones Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 1200,
+        "wires": [
+            [
+                "b0ec0fb0e4c8cacc"
+            ]
+        ]
+    },
+    {
+        "id": "7107f1e697da63aa",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "ScanZones MQTT Broker Publish",
+        "topic": "ScanZones",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 980,
+        "y": 1140,
+        "wires": []
+    },
+    {
+        "id": "927aa19022352dfe",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "ScanZones Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 1140,
+        "wires": [
+            [
+                "7107f1e697da63aa"
+            ]
+        ]
+    },
+    {
+        "id": "04233e625f32503f",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "7107f1e697da63aa"
+        ],
+        "x": 400,
+        "y": 1140,
+        "wires": [
+            [
+                "927aa19022352dfe"
+            ]
+        ]
+    },
+    {
+        "id": "04ea6719a95a7a81",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "ScanZones HTTP Endpoint",
+        "info": "",
+        "x": 370,
+        "y": 1060,
+        "wires": []
+    },
+    {
+        "id": "ab5ff35e8f8a843f",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "AutonomousScan HTTP In",
+        "url": "/AutonomousScan",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 350,
+        "y": 1440,
+        "wires": [
+            [
+                "319970f990d4f884",
+                "637be675c351a9f0"
+            ]
+        ]
+    },
+    {
+        "id": "d8800cd7b5b362d1",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "AutonomousScan HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 1040,
+        "y": 1440,
+        "wires": []
+    },
+    {
+        "id": "637be675c351a9f0",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "AutonomousScan Create OK Response",
+        "func": "msg.payload = \"Successfully posted to AutonomousScan Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 680,
+        "y": 1440,
+        "wires": [
+            [
+                "d8800cd7b5b362d1"
+            ]
+        ]
+    },
+    {
+        "id": "168f9b3dbd6debd5",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "AutonomousScan MQTT Broker Publish",
+        "topic": "AutonomousScan",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 1040,
+        "y": 1380,
+        "wires": []
+    },
+    {
+        "id": "319970f990d4f884",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "AutonomousScan Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 1380,
+        "wires": [
+            [
+                "168f9b3dbd6debd5"
+            ]
+        ]
+    },
+    {
+        "id": "56e8d66fd523b9e9",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "168f9b3dbd6debd5"
+        ],
+        "x": 400,
+        "y": 1380,
+        "wires": [
+            [
+                "319970f990d4f884"
+            ]
+        ]
+    },
+    {
+        "id": "2f1d48696352570d",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "AutonomousScan HTTP Endpoint",
+        "info": "",
+        "x": 390,
+        "y": 1300,
+        "wires": []
+    },
+    {
+        "id": "3f661b7a1155f12b",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor HTTP In",
+        "url": "/Conveyor",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 370,
+        "y": 1680,
+        "wires": [
+            [
+                "ac1bde5a11e24450",
+                "565b33a1f2c5b7dc"
+            ]
+        ]
+    },
+    {
+        "id": "5dc031b24f0b0ff2",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 980,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "565b33a1f2c5b7dc",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor Create OK Response",
+        "func": "msg.payload = \"Successfully posted to Conveyor Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 1680,
+        "wires": [
+            [
+                "5dc031b24f0b0ff2"
+            ]
+        ]
+    },
+    {
+        "id": "b885402bbf40a30a",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor MQTT Broker Publish",
+        "topic": "Conveyor",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 970,
+        "y": 1620,
+        "wires": []
+    },
+    {
+        "id": "ac1bde5a11e24450",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 650,
+        "y": 1620,
+        "wires": [
+            [
+                "b885402bbf40a30a"
+            ]
+        ]
+    },
+    {
+        "id": "589ed9ec5d7facfc",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "b885402bbf40a30a"
+        ],
+        "x": 400,
+        "y": 1620,
+        "wires": [
+            [
+                "ac1bde5a11e24450"
+            ]
+        ]
+    },
+    {
+        "id": "5bc7d223bc7954b2",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor HTTP Endpoint",
+        "info": "",
+        "x": 370,
+        "y": 1540,
+        "wires": []
+    },
+    {
+        "id": "09fc7e16f827e21c",
+        "type": "exec",
+        "z": "4edafb78d7295578",
+        "command": "python3 /data/BinPacking/main.py ",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "",
+        "x": 820,
+        "y": 3200,
+        "wires": [
+            [
+                "bc825e78f09d1125",
+                "068100b5a0eadee8"
+            ],
+            [
+                "8c38ce16d150b238"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "d98b2812c2af143a",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "BinPacking HTTP In",
+        "url": "/BinPacking",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 3200,
+        "wires": [
+            [
+                "2ec9c839791972c4"
+            ]
+        ]
+    },
+    {
+        "id": "bc825e78f09d1125",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "BinPacking HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 1220,
+        "y": 3200,
+        "wires": []
+    },
+    {
+        "id": "750c0a84a908968c",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "BinPacking HTTP Endpoint",
+        "info": "",
+        "x": 310,
+        "y": 3060,
+        "wires": []
+    },
+    {
+        "id": "068100b5a0eadee8",
+        "type": "debug",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1190,
+        "y": 3100,
+        "wires": []
+    },
+    {
+        "id": "f959b57892739a3c",
+        "type": "debug",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 750,
+        "y": 3120,
+        "wires": []
+    },
+    {
+        "id": "8c38ce16d150b238",
+        "type": "debug",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "active": false,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1270,
+        "y": 3320,
+        "wires": []
+    },
+    {
+        "id": "b3acbaf469ea0c56",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "ShortestPathWaypoint HTTP In",
+        "url": "/ShortestPathWaypoint",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 290,
+        "y": 1960,
+        "wires": [
+            [
+                "a19a91d8341b5406",
+                "8678df7211505fc1"
+            ]
+        ]
+    },
+    {
+        "id": "613a4122d5fdbbcd",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "ShortestPathWaypoint HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 1180,
+        "y": 1960,
+        "wires": []
+    },
+    {
+        "id": "8678df7211505fc1",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "ShortestPathWaypoint Create OK Response",
+        "func": "msg.payload = \"Successfully posted to ShortestPathWaypoint Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 690,
+        "y": 1960,
+        "wires": [
+            [
+                "613a4122d5fdbbcd"
+            ]
+        ]
+    },
+    {
+        "id": "c52723573c32bdbe",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "ShortestPathWaypoint MQTT Broker Publish",
+        "topic": "ShortestPathWaypoint",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 1170,
+        "y": 1900,
+        "wires": []
+    },
+    {
+        "id": "a19a91d8341b5406",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "ShortestPathWaypoint Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 690,
+        "y": 1900,
+        "wires": [
+            [
+                "c52723573c32bdbe"
+            ]
+        ]
+    },
+    {
+        "id": "168b445e68f983ee",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "c52723573c32bdbe"
+        ],
+        "x": 400,
+        "y": 1900,
+        "wires": [
+            [
+                "a19a91d8341b5406"
+            ]
+        ]
+    },
+    {
+        "id": "e0c8516b6a0ebcf0",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "ShortestPathWaypoint HTTP Endpoint",
+        "info": "",
+        "x": 410,
+        "y": 1820,
+        "wires": []
+    },
+    {
+        "id": "8e5c20b9fdc7c247",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "StorageOptimization HTTP In",
+        "url": "/StorageOptimization",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 280,
+        "y": 2280,
+        "wires": [
+            [
+                "e17af91dd55a6a26",
+                "ab9c23dd515df01e"
+            ]
+        ]
+    },
+    {
+        "id": "d4977a060d9e7a56",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "StorageOptimization HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 1150,
+        "y": 2280,
+        "wires": []
+    },
+    {
+        "id": "ab9c23dd515df01e",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "StorageOptimization  Create OK Response",
+        "func": "msg.payload = \"Successfully posted to StorageOptimization Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 670,
+        "y": 2280,
+        "wires": [
+            [
+                "d4977a060d9e7a56"
+            ]
+        ]
+    },
+    {
+        "id": "8fae3e69639b2835",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "StorageOptimization MQTT Broker Publish",
+        "topic": "StorageOptimization",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 1150,
+        "y": 2220,
+        "wires": []
+    },
+    {
+        "id": "e17af91dd55a6a26",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "StorageOptimization Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 660,
+        "y": 2220,
+        "wires": [
+            [
+                "8fae3e69639b2835"
+            ]
+        ]
+    },
+    {
+        "id": "622aac04124d0a8a",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "8fae3e69639b2835"
+        ],
+        "x": 380,
+        "y": 2220,
+        "wires": [
+            [
+                "e17af91dd55a6a26"
+            ]
+        ]
+    },
+    {
+        "id": "748a365c0d1b0ec2",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "StorageOptimization HTTP Endpoint",
+        "info": "",
+        "x": 380,
+        "y": 2140,
+        "wires": []
+    },
+    {
+        "id": "2ec9c839791972c4",
+        "type": "json",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "property": "payload",
+        "action": "str",
+        "pretty": false,
+        "x": 350,
+        "y": 3200,
+        "wires": [
+            [
+                "38a8de82e7fef588"
+            ]
+        ]
+    },
+    {
+        "id": "38a8de82e7fef588",
+        "type": "file",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "filename": "/data/temp.json",
+        "filenameType": "str",
+        "appendNewline": false,
+        "createDir": false,
+        "overwriteFile": "true",
+        "encoding": "none",
+        "x": 560,
+        "y": 3200,
+        "wires": [
+            [
+                "09fc7e16f827e21c"
+            ]
+        ]
+    },
+    {
+        "id": "6aa1146d8fbac24b",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "D365TMO HTTP In",
+        "url": "/D365TMO/Tasks/*",
+        "method": "put",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 250,
+        "y": 2540,
+        "wires": [
+            [
+                "3ac0397b9a7034a5",
+                "5a03d58f355c81a1"
+            ]
+        ]
+    },
+    {
+        "id": "c619e89ea49d624d",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "D365TMO HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 1120,
+        "y": 2540,
+        "wires": []
+    },
+    {
+        "id": "5a03d58f355c81a1",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "D365TMO  Create OK Response",
+        "func": "msg.payload = \"Successfully posted to D365TMO Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 2540,
+        "wires": [
+            [
+                "c619e89ea49d624d"
+            ]
+        ]
+    },
+    {
+        "id": "8f53c79060e2981f",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "D365TMO MQTT Broker Publish",
+        "topic": "D365TMO",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 1110,
+        "y": 2480,
+        "wires": []
+    },
+    {
+        "id": "3ac0397b9a7034a5",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "D365TMO Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 630,
+        "y": 2480,
+        "wires": [
+            [
+                "8f53c79060e2981f"
+            ]
+        ]
+    },
+    {
+        "id": "f75a2d491b2a1b97",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "8f53c79060e2981f"
+        ],
+        "x": 380,
+        "y": 2480,
+        "wires": [
+            [
+                "3ac0397b9a7034a5"
+            ]
+        ]
+    },
+    {
+        "id": "3e169c605a6e7475",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "D365TMO HTTP Endpoint",
+        "info": "",
+        "x": 350,
+        "y": 2400,
+        "wires": []
+    },
+    {
+        "id": "74badf5dd49bbe5a",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "TMO HTTP In",
+        "url": "/TMO",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 330,
+        "y": 2820,
+        "wires": [
+            [
+                "aeee4bfa32f30d53",
+                "8b6abe5a560d5559"
+            ]
+        ]
+    },
+    {
+        "id": "84d4032e2d600dd6",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "TMO HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 1020,
+        "y": 2820,
+        "wires": []
+    },
+    {
+        "id": "8b6abe5a560d5559",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "TMO  Create OK Response",
+        "func": "msg.payload = \"Successfully posted to TMO Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 2820,
+        "wires": [
+            [
+                "84d4032e2d600dd6"
+            ]
+        ]
+    },
+    {
+        "id": "89f91d2b2b841c1d",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "TMO MQTT Broker Publish",
+        "topic": "TMO",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 1020,
+        "y": 2760,
+        "wires": []
+    },
+    {
+        "id": "aeee4bfa32f30d53",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "TMO Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 2760,
+        "wires": [
+            [
+                "89f91d2b2b841c1d"
+            ]
+        ]
+    },
+    {
+        "id": "f4231548c87fe05c",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "89f91d2b2b841c1d"
+        ],
+        "x": 380,
+        "y": 2760,
+        "wires": [
+            [
+                "aeee4bfa32f30d53"
+            ]
+        ]
+    },
+    {
+        "id": "420aab67c0cfd0fd",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "TMO HTTP Endpoint",
+        "info": "",
+        "x": 330,
+        "y": 2680,
+        "wires": []
+    },
+    {
+        "id": "1d4a8b827ffa1e24",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "D365OneRFID HTTP In",
+        "url": "/D365OneRFID",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 220,
+        "y": 3520,
+        "wires": [
+            [
+                "b99f73050746e526",
+                "322e95a88dbd83ff"
+            ]
+        ]
+    },
+    {
+        "id": "681441d2f6fa8e10",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "D365OneRFID HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 1100,
+        "y": 3520,
+        "wires": []
+    },
+    {
+        "id": "322e95a88dbd83ff",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "D365OneRFID  Create OK Response",
+        "func": "msg.payload = \"Successfully posted to D365OneRFID Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 610,
+        "y": 3520,
+        "wires": [
+            [
+                "681441d2f6fa8e10"
+            ]
+        ]
+    },
+    {
+        "id": "11c22b5e7a9d6ed5",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "D365OneRFID MQTT Broker Publish",
+        "topic": "D365OneRFID",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 1090,
+        "y": 3460,
+        "wires": []
+    },
+    {
+        "id": "b99f73050746e526",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "D365OneRFID Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 600,
+        "y": 3460,
+        "wires": [
+            [
+                "11c22b5e7a9d6ed5"
+            ]
+        ]
+    },
+    {
+        "id": "5e26f4fa608fe5c4",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "11c22b5e7a9d6ed5"
+        ],
+        "x": 340,
+        "y": 3460,
+        "wires": [
+            [
+                "b99f73050746e526"
+            ]
+        ]
+    },
+    {
+        "id": "ba721d4e353c32b6",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "D365OneRFID HTTP Endpoint",
+        "info": "",
+        "x": 330,
+        "y": 3380,
+        "wires": []
+    },
+    {
+        "id": "08a2245e514bda61",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor1330 HTTP In",
+        "url": "/Conveyor1330",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 1320,
+        "y": 1680,
+        "wires": [
+            [
+                "22fb1fb31886060e",
+                "90d0792b5563f988"
+            ]
+        ]
+    },
+    {
+        "id": "6e0a537da057d4ca",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 1920,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "90d0792b5563f988",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor Create OK Response",
+        "func": "msg.payload = \"Successfully posted to Conveyor Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1590,
+        "y": 1680,
+        "wires": [
+            [
+                "6e0a537da057d4ca"
+            ]
+        ]
+    },
+    {
+        "id": "3faaa52166dd1cbc",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor MQTT Broker Publish",
+        "topic": "Conveyor1330",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 1910,
+        "y": 1620,
+        "wires": []
+    },
+    {
+        "id": "22fb1fb31886060e",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1590,
+        "y": 1620,
+        "wires": [
+            [
+                "3faaa52166dd1cbc"
+            ]
+        ]
+    },
+    {
+        "id": "edaec672127f6957",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "3faaa52166dd1cbc"
+        ],
+        "x": 1340,
+        "y": 1620,
+        "wires": [
+            [
+                "22fb1fb31886060e"
+            ]
+        ]
+    },
+    {
+        "id": "5ff294b636883b81",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "Conveyor1330 HTTP Endpoint",
+        "info": "",
+        "x": 1320,
+        "y": 1540,
+        "wires": []
+    },
+    {
+        "id": "ce35138cbe37640c",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors HTTP In",
+        "url": "/TransitionDoors1330",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 1370,
+        "y": 980,
+        "wires": [
+            [
+                "01787d458b7db764",
+                "a04254805d256250"
+            ]
+        ]
+    },
+    {
+        "id": "43fc5dc0c391c41b",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors1330 HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 2010,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "a04254805d256250",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "TansitionDoors1330 Create OK Response",
+        "func": "msg.payload = \"Successfully posted to TransitionDoor1330 Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1680,
+        "y": 980,
+        "wires": [
+            [
+                "43fc5dc0c391c41b"
+            ]
+        ]
+    },
+    {
+        "id": "f09f91769c2b962d",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoor1330 MQTT Broker Publish",
+        "topic": "TransitionDoors1330",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 2000,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "01787d458b7db764",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors1330 Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1680,
+        "y": 920,
+        "wires": [
+            [
+                "f09f91769c2b962d"
+            ]
+        ]
+    },
+    {
+        "id": "8d9183964ca20104",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "f09f91769c2b962d"
+        ],
+        "x": 1400,
+        "y": 920,
+        "wires": [
+            [
+                "01787d458b7db764"
+            ]
+        ]
+    },
+    {
+        "id": "e510a08b87d5f7af",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors1330 HTTP Endpoint",
+        "info": "",
+        "x": 1400,
+        "y": 840,
+        "wires": []
+    },
+    {
+        "id": "bb20039be2695f67",
+        "type": "http in",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors HTTP In",
+        "url": "/TransitionDoors2200",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 2330,
+        "y": 980,
+        "wires": [
+            [
+                "39e82f0a638d420a",
+                "148dabf367fe0d30"
+            ]
+        ]
+    },
+    {
+        "id": "7f5a75234283c986",
+        "type": "http response",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors2200 HTTP Respond 200 OK",
+        "statusCode": "",
+        "headers": {},
+        "x": 2970,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "148dabf367fe0d30",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "TansitionDoors2200 Create OK Response",
+        "func": "msg.payload = \"Successfully posted to TransitionDoor2200 Meld endpoint.\"\nmsg.statusCode = 200\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2640,
+        "y": 980,
+        "wires": [
+            [
+                "7f5a75234283c986"
+            ]
+        ]
+    },
+    {
+        "id": "ef77c73f78098a88",
+        "type": "mqtt out",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoor2200 MQTT Broker Publish",
+        "topic": "TransitionDoors2200",
+        "qos": "1",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "979d1cd475fff04d",
+        "x": 2960,
+        "y": 920,
+        "wires": []
+    },
+    {
+        "id": "39e82f0a638d420a",
+        "type": "function",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors2200 Status gated queue",
+        "func": "\nvar MAX_DEPTH = 50;\n\n// if queue doesn't exist, create it\ncontext.queue = context.queue || [];\ncontext.pass = context.pass || false;\n\n// Use MQTT connected status to gate flow\nif (msg.hasOwnProperty(\"status\")) {\n    if (msg.status.text.indexOf(\".connected\") !== -1) { \n        setTimeout(function() { \n            while (context.queue.length > 0) {\n                var m = context.queue.shift();\n                node.send(m); \n            }\n            context.pass = true; \n            node.status({});\n        },5);\n    }\n    else { context.pass = false; }\n}\nelse {\n    if (context.pass) { return msg; }\n    else { \n        context.queue.push(msg); \n        if (context.queue.length > MAX_DEPTH) { context.queue.shift(); }\n        node.status({text:context.queue.length});\n    }\n}\nreturn null;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 2640,
+        "y": 920,
+        "wires": [
+            [
+                "ef77c73f78098a88"
+            ]
+        ]
+    },
+    {
+        "id": "ef729e5e691a5d3e",
+        "type": "status",
+        "z": "4edafb78d7295578",
+        "name": "",
+        "scope": [
+            "ef77c73f78098a88"
+        ],
+        "x": 2360,
+        "y": 920,
+        "wires": [
+            [
+                "39e82f0a638d420a"
+            ]
+        ]
+    },
+    {
+        "id": "7d86f822b43f3cda",
+        "type": "comment",
+        "z": "4edafb78d7295578",
+        "name": "TransitionDoors2200 HTTP Endpoint",
+        "info": "",
+        "x": 2360,
+        "y": 840,
+        "wires": []
+    }
+]
